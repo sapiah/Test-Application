@@ -1,5 +1,7 @@
 ---
 platform: linux
+params:
+  TEST_STRING: ((test-variable))
 image_resource:
   type: docker-image
   source:
@@ -13,5 +15,6 @@ run:
   args:
   - -exc
   - |
+    echo $TEST_STRING
     cd test-application-develop
     ./gradlew test --stacktrace
