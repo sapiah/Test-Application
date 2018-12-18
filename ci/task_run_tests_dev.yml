@@ -6,12 +6,12 @@ image_resource:
     repository: skobow/docker-gradle-git
     tag: latest
 inputs:
-- name: git-ts-skills-develop
+- name: test-application-develop
 
 run:
   path: sh
   args:
   - -exc
   - |
-    cd git-ts-skills-develop
+    cd test-application-develop
     ./gradlew test --stacktrace
