@@ -1,0 +1,20 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: skobow/docker-gradle-git
+    tag: latest
+inputs:
+- name: git-ts-skills-develop
+outputs:
+- name: artifacts
+
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    cd git-ts-skills-develop
+    ./gradlew clean assemble --stacktrace
+    cp skills-rest-api/build/libs/*.jar ../artifacts/

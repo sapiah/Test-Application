@@ -10,163 +10,27 @@ resource_types:
     repository: jtarchie/pr
 
 resources:
-- name: git-ts-skills-develop
+- name: test-application-develop
   type: git
   source:
-    uri: git@github.com:Tribalscale/ts-skills-springboot.git
-    branch: develop
-    private_key: ((github-private-key))
-
-- name: git-ts-skills-staging
-  type: git-multibranch
-  source:
-    uri: git@github.com:Tribalscale/ts-skills-springboot.git
-    branches: 'release/*.*.*'
-    private_key: ((github-private-key))
-
-- name: git-ts-skills-production
-  type: git
-  source:
-    uri: git@github.com:Tribalscale/ts-skills-springboot.git
+    uri: git@github.com:sapiah/Test-Application.git
     branch: master
     private_key: ((github-private-key))
-
-- name: cf-server
-  type: cf
-  source:
-    api: https://api.run.pivotal.io
-    username: ((cf-username))
-    password: ((cf-password))
-    organization: ((cf-org))
-    space: ((cf-dev-space))
-
-- name: git-pull-requests
-  type: pull-request
-  source:
-    access_token: ((github-access-token))
-    private_key:  ((github-private-key))
-    uri: git@github.com:TribalScale/ts-skills-springboot
-    repo: TribalScale/ts-skills-springboot
 
 jobs:
 - name: Unit Tests - Dev
   public: false
   plan:
-  - get: git-ts-skills-develop
+  - get: test-application-develop
     trigger: true
   - task: Run Unit Tests Dev
-    file: git-ts-skills-develop/ci/task_run_tests_dev.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-
-- name: Unit Tests - Staging
-  public: false
-  plan:
-  - get: git-ts-skills-staging
-    trigger: true
-  - task: Run Unit Tests Staging
-    file: git-ts-skills-staging/ci/task_run_tests_staging.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-
-- name: Unit Tests - Production
-  public: false
-  plan:
-  - get: git-ts-skills-production
-    trigger: true
-  - task: Run Unit Tests Production
-    file: git-ts-skills-production/ci/task_run_tests_production.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
+    file: test-application-develop/ci/task_run_tests_dev.yml
 
 - name: Build Dev
   public: false
   plan:
-  - get: git-ts-skills-develop
+  - get: test-application-develop
     passed: [Unit Tests - Dev]
     trigger: true
   - task: Build Dev
-    file: git-ts-skills-develop/ci/task_build_dev.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-  - put: cf-server
-    params:
-      manifest: git-ts-skills-develop/ci/cf_dev_manifest.yml
-      path: artifacts/*.jar
-
-- name: Build Staging
-  public: false
-  plan:
-  - get: git-ts-skills-staging
-    passed: [Unit Tests - Staging]
-    trigger: true
-  - task: Build Staging
-    file: git-ts-skills-staging/ci/task_build_staging.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-  - put: cf-server
-    params:
-      manifest: git-ts-skills-staging/ci/cf_staging_manifest.yml
-      path: artifacts/*.jar
-
-- name: Build Production
-  public: false
-  plan:
-  - get: git-ts-skills-production
-    passed: [Unit Tests - Production]
-    trigger: true
-  - task: Build Production
-    file: git-ts-skills-production/ci/task_build_production.yml
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-  - put: cf-server
-    params:
-      manifest: git-ts-skills-production/ci/cf_production_manifest.yml
-      path: artifacts/*.jar
-
-- name: Test Pull Request
-  public: true
-  plan:
-  - get: git-pull-requests
-    trigger: true
-    version: every
-  - put: git-pull-requests
-    params:
-      path: git-pull-requests
-      status: pending
-  - task: Test Pull Request
-    params:
-      GITHUB_API_PUBLIC_KEY_PEM: ((github-app-public-key))
-      GITHUB_API_PRIVATE_KEY_PKCS8: ((github-app-private-key))
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: skobow/docker-gradle-git
-          tag: latest
-      inputs:
-      - name: git-pull-requests
-      run:
-        path: sh
-        args:
-        - -exc
-        - |
-          cd git-pull-requests
-          ./gradlew test --stacktrace
-    on_success:
-      put: git-pull-requests
-      params:
-        path: git-pull-requests
-        status: success
-    on_failure:
-      put: git-pull-requests
-      params:
-        path: git-pull-requests
-        status: failure
+    file: test-application-develop/ci/task_build_dev.yml
